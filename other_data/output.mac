@@ -1,1 +1,1 @@
-g : a_m*b_r*c+a_r*b_m*c-a_r*b_r*c+α_m*β_r/b+α_r*β_m/b-α_r*β_r/b;
+g: a_m*b_r+a_r*b_m-a_r*b_r+c+α_m*β/(b_m+b_r)+α_r*β/(b_m+b_r)-α_m*β/b_m;

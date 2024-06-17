@@ -20,7 +20,7 @@ transformations=(standard_transformations +
                   ))
 
 
-def add_break(f, n, Atom):
+def add_break(f, n, atoms):
     expr = parse_expr(f, transformations=transformations)
     expr = expand(expr)
     expr = str(expr).replace(' ', '')
@@ -30,18 +30,18 @@ def add_break(f, n, Atom):
     print(components)
     out = ''
     for component in components:
-        out += find_atoms(component, n, Atom)
+        out += find_atoms(component, n, atoms)
     return out 
-    # return change_comp(components, n, Atom)
+    # return change_comp(components, n, atoms)
 
 def to_list(token):
     return [i for i in token]
 
-def find_atoms(tokens, n, Atom):
+def find_atoms(tokens, n, atoms):
     tokens = split('(\*|/)', str(tokens))
     print('tokens: ' + str(tokens))
 
-    if len(tokens) == 1 and tokens[0] in Atom:
+    if len(tokens) == 1 and tokens[0] in atoms:
         return single_change(tokens[0],n)
         
         
@@ -50,7 +50,7 @@ def find_atoms(tokens, n, Atom):
     for i in range(len(tokens)):
         for j in range(i + 1, len(tokens)):
             print(str(i) + ' ' + str(j))
-            if (tokens[i] in Atom) and (tokens[j] in Atom):
+            if (tokens[i] in atoms) and (tokens[j] in atoms):
                 if tokens[j - 1] == '*':
                     if i == j - 2:
                         tokens[j-1] = mul_change(tokens[i], tokens[j], n)
@@ -60,7 +60,7 @@ def find_atoms(tokens, n, Atom):
                         tokens = tokens[0:i] + tokens[i] + '*' + tokens[j] + tokens[i + 1: j -1] + tokens[j + 1: len(tokens)]
                         tokens[i + 1] = mul_change(a, b, n)
                         tokens[i], tokens[i + 2] = '', ''
-                    # return add_breaking(tokens, n, Atom)
+                    # return add_breaking(tokens, n, atoms)
                 elif tokens[j - 1] == '/':
                     if i == j - 2:
                         tokens[j - 1] = div_change(tokens[i], tokens[j], n)
@@ -72,16 +72,16 @@ def find_atoms(tokens, n, Atom):
                         tokens[i + 2] = div_change(a, b, n)
                         tokens[i + 1], tokens[i + 3] = '', ''
                         print('tokens(div2): ' + str(tokens))
-                    # return add_breaking(tokens, n, Atom)
+                    # return add_breaking(tokens, n, atoms)
                 elif tokens[i - 1] == '/':
                     a, b = tokens[j], tokens[i]
                     tokens = tokens[0:i] + tokens[j] + '/' + tokens[i] + tokens[i + 1: j -1] + tokens[j + 1: len(tokens)]
                     tokens[j + 1] = div_change(a, b, n)
                     tokens[j], tokens[j + 2] = '', ''
-                    # return add_breaking(tokens, n, Atom)
+                    # return add_breaking(tokens, n, atoms)
                 elif 'sin' in tokens[j]:
                     tokens[j] = sin_change(tokens[j])
-                return add_break(''.join(tokens), n, Atom)
+                return add_break(''.join(tokens), n, atoms)
     return ''.join(tokens)
 
 def single_change(a, n):
