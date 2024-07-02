@@ -118,11 +118,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             file = open(filename[0], "r+")
 
             FileInput = file.read()
-            print(FileInput)
+            # print(FileInput)
 
             InputList = process_input(FileInput)
-            for i in InputList:
-                print(i)
+            # for i in InputList:
+            #     # print(i)
 
             f = InputList[0]
             n = InputList[1]
@@ -149,15 +149,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             out_file.write('g: ' + self.ui.solution_input.toPlainText() + ';')
             out_file.close
-        print(filename)
+        # print(filename)
 
     def slove_func(self):
         f = self.ui.formula_input.toPlainText()
         n = self.ui.split_input.value()
         atoms = get_variables(self.ui.atoms_input.text())
-        print(f)
-        print(n)
-        print(atoms)
+        # print(f)
+        # print(n)
+        # print(atoms)
         self.ui.solution_input.clear()
         self.ui.solution_input.append(add_break(f, n, atoms))
 

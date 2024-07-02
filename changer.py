@@ -19,42 +19,86 @@ transformations=(standard_transformations +
                   function_exponentiation,
                   ))
 
+funcs = ['sin', 'cos', 'tan', 'cot', 'sqrt', 'sign']
+
 
 def add_break(f, n, atoms):
+    # print(f)
+    f = f.replace('^', '**')
     expr = parse_expr(f, transformations=transformations)
     expr = expand(expr)
     expr = str(expr).replace(' ', '')
+    # expr = expr.replace('**', '^')
     # print(expr)
 
-    components = split('([-+])', expr)
+    components = split(r'(sin|cos|tan|cot|sqrt|sign|\+|-|\))', expr)
+    # print(components)
+    i = 0
+    while i < len(components):
+        if components[i] in funcs:
+            if i > 0 and not(components[i - 1] in ['+', '-']):
+                components[i] = components[i - 1] + components[i]
+                components.pop(i - 1)
+                i -= 1
+
+            while components[i + 1] != ')':
+                components[i] = components[i] + components[i + 1]
+                components.pop(i + 1)
+            components[i] = components[i] + components[i + 1]
+            components.pop(i + 1)
+
+            if i < len(components) - 1:
+                if not(components[i + 1] in ['+', '-']):
+                    components[i] = components[i] + components[i + 1]
+                    components.pop(i + 1)
+        if components[i] == '':
+            components.pop(i)
+        else:
+            i += 1
     # print(components)
     out = ''
     for component in components:
         out += find_atoms(component, n, atoms)
     # print(out)
-    expr = parse_expr(out, transformations=transformations)
-    expr = simplify(expr)
-    # print(expr)
+    # out.replace('^', '**')
+    expr = parse_expr(out, transformations='all')
+    print(expr)
+    # expr = simplify(expr)
+    expr = str(expr).replace('**', '^')
     return str(expr) 
+    # return out
     # return change_comp(components, n, atoms)
 
 def to_list(token):
     return [i for i in token]
 
 def find_atoms(tokens, n, atoms):
-    tokens = split('(\*|/)', str(tokens))
-    # print('tokens: ' + str(tokens))
 
-    if len(tokens) == 1 and tokens[0] in atoms:
-        return single_change(tokens[0],n)
-    elif len(tokens) == 1 and tokens[0] in ['+', '-']:
+    if len(tokens) == 1 and (tokens[0] == '+' or tokens[0] == '-'):
         return tokens[0]
-    
+
+    tokens = split(r'(sin|cos|tan|cot|sqrt|sign|\*|\/|\))', str(tokens))
+    # print(tokens)
+
+    i = 0
+    while i < len(tokens):
+        if tokens[i] in funcs:
+            while tokens[i + 1] != ')':
+                tokens[i] = tokens[i] + tokens[i + 1]
+                tokens.pop(i + 1)
+            tokens[i] = tokens[i] + tokens[i + 1]
+            tokens.pop(i + 1)
+        if tokens[i] == '':
+            tokens.pop(i)
+        else:
+            i += 1
+
+ 
     is_atom = False
 
     for token in tokens:
         for atom in atoms:
-            if atom in tokens:
+            if atom in token:
                 is_atom = True
                 break
     if is_atom == False:
@@ -106,9 +150,19 @@ def find_atoms(tokens, n, atoms):
     for i in range(len(tokens) - atoms_lenght, len(tokens)):
         n = int(n)
         token = tokens[i]
-        if 'sin' in tokens[i] or 'cos' in tokens[i] or 'tan' in tokens[i] or 'cot' in tokens[i] or 'sign' in tokens[i]:
-            for atom in atoms:
-                token = ''.join(token.split('(')[1].replace(atom, atom + '_p'))
+        print('input: ' + token)
+        if 'sin' in token or 'cos' in token or 'tan' in token or 'cot' in token or 'sign' in token or 'sqrt' in token:
+            cur_token = split(r'(\(|\))', tokens[i])
+            # print(cur_token)
+            for j in range(len(cur_token)):
+                if cur_token[j] == '(':
+                    for atom in atoms:
+                        if n == 0 or n ==1:
+                            cur_token[j + 1] = cur_token[j + 1].replace(atom, atom + '_p')
+                        elif n == 2:
+                            cur_token[j + 1] = cur_token[j + 1].replace(atom, '(' + atom + '_r+' + atom + '_m)') 
+            token = ''.join(cur_token) 
+            # print(token)  
         else:
             for atom in atoms:
                 if n == 0 or n ==1:
@@ -118,9 +172,19 @@ def find_atoms(tokens, n, atoms):
         out_pl += token
 
         token = tokens[i]
-        if 'sin' in tokens[i] or 'cos' in tokens[i] or 'tan' in tokens[i] or 'cot' in tokens[i] or 'sign' in tokens[i]:
-            for atom in atoms:
-                token = ''.join(token.split('(')[1].replace(atom, atom + '_m'))
+        # print(token)
+        if 'sin' in token or 'cos' in token or 'tan' in token or 'cot' in token or 'sign' in token or 'sqrt' in token:
+            cur_token = split(r'(\(|\))', tokens[i])
+            # print(cur_token)
+            for j in range(len(cur_token)):
+                if cur_token[j] == '(':
+                    for atom in atoms:
+                        if n == 0 or n ==2:
+                            cur_token[j + 1] = cur_token[j + 1].replace(atom, atom + '_m')
+                        elif n == 1:
+                            cur_token[j + 1] = cur_token[j + 1].replace(atom, '(' + atom + '_p-' + atom + '_r)')   
+            token = ''.join(cur_token) 
+            # print(token) 
         else:
             for atom in atoms:
                 if n == 0 or n == 2:
@@ -129,8 +193,13 @@ def find_atoms(tokens, n, atoms):
                     token = token.replace(atom, '(' + atom + '_p-' + atom + '_r)')
         out_min += token
     
-
+    print('outstr: ' + out_pl + ' ' + out_min)
     return ''.join(tokens[0:-atoms_lenght]) + '(' +  out_pl + '-' + out_min + ')'
+
+
+
+
+
     # print(tokens)
     # print(str(atoms_lenght) + ' ' + tokens[-atoms_lenght] + '' + str(lenght) + tokens[lenght])
 
@@ -173,7 +242,7 @@ def find_atoms(tokens, n, atoms):
     #             elif 'sin' in tokens[j]:
     #                 tokens[j] = sin_change(tokens[j])
     #             return add_break(''.join(tokens), n, atoms)
-    # return ''.join(tokens)
+    return ''.join(tokens)
 
 def single_change(a, n):
     if int(n) == 0:
