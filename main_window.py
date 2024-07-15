@@ -1,31 +1,28 @@
 import sys
 import os
-# import re
 from re import compile
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton
 from PySide6.QtSql import QSqlTableModel
 from PySide6 import QtWidgets
-# from PySide6.QtWidgets import *
 
 from changer import add_break
 from ui_main import Ui_MainWindow
 
 
+
 def process_input(input_text):
-    # Split the input text into lines
     lines = input_text.strip().split('\n')
-
-    # Remove semicolons from each line and strip any extra whitespace
     cleaned_lines = [line.replace(';', '').strip() for line in lines]
-
     return cleaned_lines
 
 
+
 def get_variables(input_string):
-    var_pattern = compile(r'[a-zA-Zα-ωΓ-Ω]+')
+    var_pattern = compile(r'[a-zA-Zα-ωΓ-Ω_0-9]+')
     variables = set(var_pattern.findall(input_string))
     return variables
+
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -37,7 +34,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ui.load_button.clicked.connect(self.open_file)
         self.ui.save_button.clicked.connect(self.save_file)
         self.ui.slave_button.clicked.connect(self.slove_func)
-        # self.ui.pushButton.clicked.connect(self.get_cursor_position)
         
         self.ui.f_button1.clicked.connect(lambda: self.add_symb_to_form('α'))
         self.ui.f_button2.clicked.connect(lambda: self.add_symb_to_form('β'))
@@ -108,7 +104,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def open_file(self):
-        
         nofile = ('', '')
         current_folder_path = os.getcwd()
         filename = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", current_folder_path,
@@ -118,20 +113,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             file = open(filename[0], "r+")
 
             FileInput = file.read()
-            # print(FileInput)
 
             InputList = process_input(FileInput)
-            # for i in InputList:
-            #     # print(i)
 
             f = InputList[0]
             n = InputList[1]
-            discontinuous_quantities = get_variables(InputList[2])
+            atoms = get_variables(InputList[2])
 
             self.ui.formula_input.clear()
             self.ui.formula_input.append(f)
 
-            self.ui.atoms_input.setText(' '.join(discontinuous_quantities))
+            self.ui.atoms_input.setText(' '.join(atoms))
 
             self.ui.split_input.setValue(int(n))
 
@@ -149,26 +141,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             out_file.write('g: ' + self.ui.solution_input.toPlainText() + ';')
             out_file.close
-        # print(filename)
 
     def slove_func(self):
         f = self.ui.formula_input.toPlainText()
         n = self.ui.split_input.value()
         atoms = get_variables(self.ui.atoms_input.text())
-        # print(f)
-        # print(n)
-        # print(atoms)
         self.ui.solution_input.clear()
         self.ui.solution_input.append(add_break(f, n, atoms))
 
     def add_symb_to_form(self, symb):
         self.ui.formula_input.textCursor().insertText(symb)
-        # print(self.ui.formula_input.textCursor().position())
 
     def add_symb_to_atoms(self, symb):
-        # print(self.ui.atoms_input.text(), self.ui.atoms_input.cursorPosition())
         if self.ui.atoms_input.cursorPosition() == 0 or self.ui.atoms_input.text()[self.ui.atoms_input.cursorPosition() - 1] == ' ':
             self.ui.atoms_input.insert(symb)
         else:
             self.ui.atoms_input.insert(' ' + symb)
-        # print(self.ui.atoms_input.cursorPosition())

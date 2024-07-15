@@ -1,4 +1,5 @@
 from re import split
+from re import sub
 import sympy
 from sympy import *
 
@@ -21,18 +22,14 @@ transformations=(standard_transformations +
 
 funcs = ['sin', 'cos', 'tan', 'cot', 'sqrt', 'sign']
 
-
 def add_break(f, n, atoms):
-    # print(f)
     f = f.replace('^', '**')
     expr = parse_expr(f, transformations=transformations)
     expr = expand(expr)
+    expr = str(expr).replace('**', '^')
     expr = str(expr).replace(' ', '')
-    # expr = expr.replace('**', '^')
-    # print(expr)
 
     components = split(r'(sin|cos|tan|cot|sqrt|sign|\+|-|\))', expr)
-    # print(components)
     i = 0
     while i < len(components):
         if components[i] in funcs:
@@ -55,22 +52,13 @@ def add_break(f, n, atoms):
             components.pop(i)
         else:
             i += 1
-    # print(components)
     out = ''
     for component in components:
         out += find_atoms(component, n, atoms)
-    # print(out)
-    # out.replace('^', '**')
+    f = f.replace('^', '**')
     expr = parse_expr(out, transformations='all')
-    print(expr)
-    # expr = simplify(expr)
     expr = str(expr).replace('**', '^')
     return str(expr) 
-    # return out
-    # return change_comp(components, n, atoms)
-
-def to_list(token):
-    return [i for i in token]
 
 def find_atoms(tokens, n, atoms):
 
@@ -78,7 +66,6 @@ def find_atoms(tokens, n, atoms):
         return tokens[0]
 
     tokens = split(r'(sin|cos|tan|cot|sqrt|sign|\*|\/|\))', str(tokens))
-    # print(tokens)
 
     i = 0
     while i < len(tokens):
@@ -104,7 +91,7 @@ def find_atoms(tokens, n, atoms):
     if is_atom == False:
         return '0'
     
-    # tokens.append('')
+    # print('1st: ' + str(tokens))
     atoms_lenght = 0  
     for atom in atoms:
         if atom in tokens[0]:
@@ -115,23 +102,23 @@ def find_atoms(tokens, n, atoms):
             break
 
     
-    lenght = len(tokens)
+    lenght = len(tokens) - atoms_lenght
     i = 2
+    atom_replaced = False
 
-    while i < lenght:
+    while i <= lenght:
         for atom in atoms:
             if atom in tokens[i]:
-                # print(str(i) + ' ' + tokens[i] + ' ' + atom)
-                tokens.append(tokens[i - 1])
-                tokens.append(tokens[i])
-                tokens.pop(i)
                 tokens.pop(i-1)
                 atoms_lenght += 2
                 lenght -= 2
+                atom_replaced = True
                 break
-        i += 2
+        if atom_replaced:
+            atom_replaced = False
+        else:
+            i += 2
 
-    # print(tokens)
     if tokens[-atoms_lenght] == '/':
         tokens = tokens[:-atoms_lenght] + ['*', '(', '1'] + tokens[-atoms_lenght:]
         tokens.append(')')
@@ -142,153 +129,87 @@ def find_atoms(tokens, n, atoms):
         atoms_lenght += 1
     
 
-    # print(-atoms_lenght)
-    # print(tokens)
-
     out_min = ''
     out_pl = ''
     for i in range(len(tokens) - atoms_lenght, len(tokens)):
         n = int(n)
         token = tokens[i]
-        print('input: ' + token)
-        if 'sin' in token or 'cos' in token or 'tan' in token or 'cot' in token or 'sign' in token or 'sqrt' in token:
-            cur_token = split(r'(\(|\))', tokens[i])
-            # print(cur_token)
-            for j in range(len(cur_token)):
-                if cur_token[j] == '(':
-                    for atom in atoms:
-                        if n == 0 or n ==1:
-                            cur_token[j + 1] = cur_token[j + 1].replace(atom, atom + '_p')
-                        elif n == 2:
-                            cur_token[j + 1] = cur_token[j + 1].replace(atom, '(' + atom + '_r+' + atom + '_m)') 
-            token = ''.join(cur_token) 
-            # print(token)  
-        else:
-            for atom in atoms:
-                if n == 0 or n ==1:
-                    token = token.replace(atom, atom + '_p')
-                elif n == 2:
-                    token = token.replace(atom, '(' + atom + '_r+' + atom + '_m)')
-        out_pl += token
-
-        token = tokens[i]
         # print(token)
         if 'sin' in token or 'cos' in token or 'tan' in token or 'cot' in token or 'sign' in token or 'sqrt' in token:
             cur_token = split(r'(\(|\))', tokens[i])
-            # print(cur_token)
             for j in range(len(cur_token)):
                 if cur_token[j] == '(':
-                    for atom in atoms:
-                        if n == 0 or n ==2:
-                            cur_token[j + 1] = cur_token[j + 1].replace(atom, atom + '_m')
-                        elif n == 1:
-                            cur_token[j + 1] = cur_token[j + 1].replace(atom, '(' + atom + '_p-' + atom + '_r)')   
+                    func_data = split(r'(\+|-|\*|\/|\^)', cur_token[j + 1])
+                    for k in range(len(func_data)):
+                        if (n == 0 or n ==1) and func_data[k] in atoms:
+                            func_data[k] = func_data[k] + '_p'
+                        elif n == 2 and func_data[k] in atoms:
+                            func_data[k] = '(' + func_data[k] + '_r+' + func_data[k] + '_m)'
+                    cur_token[j + 1] = ''.join(func_data)
+
+                    # for atom in atoms:
+                    #     if n == 0 or n ==1:
+                    #         cur_token[j + 1] = cur_token[j + 1].replace(atom, atom + '_p')
+                    #     elif n == 2:
+                    #         cur_token[j + 1] = cur_token[j + 1].replace(atom, '(' + atom + '_r+' + atom + '_m)') 
             token = ''.join(cur_token) 
-            # print(token) 
         else:
-            for atom in atoms:
-                if n == 0 or n == 2:
-                    token = token.replace(atom, atom + '_m')
-                elif n ==1:
-                    token = token.replace(atom, '(' + atom + '_p-' + atom + '_r)')
+            if n == 0 or n ==1:
+                if token in atoms:
+                    token = token + '_p'
+                if '^' in token:
+                    if token.split('^')[0] in atoms:
+                        token = token.split('^')[0] + '_p^' + token.split('^')[1]
+                    if token.split('^')[1] in atoms:
+                        token = token.split('^')[0] + '^' + token.split('^')[1] + '_p'
+                # token = token.replace(atom, atom + '_p')
+            elif n == 2:
+                if token in atoms:
+                    token = '(' + token + '_r+' + token + '_m)'
+                if '^' in token:
+                    if token.split('^')[0] in atoms:
+                        token = '(' + token.split('^')[0] + '_r+' + token.split('^')[0] + '_m)^' + token.split('^')[1]
+                    if token.split('^')[1] in atoms:
+                        token = token.split('^')[0] + '^(' + token.split('^')[1] + '_r+' + token.split('^')[1] + '_m)'
+                # token = token.replace(atom, '(' + atom + '_r+' + atom + '_m)')
+        out_pl += token
+
+        token = tokens[i]
+        if 'sin' in token or 'cos' in token or 'tan' in token or 'cot' in token or 'sign' in token or 'sqrt' in token:
+            cur_token = split(r'(\(|\))', tokens[i])
+            for j in range(len(cur_token)):
+                if cur_token[j] == '(':
+                    func_data = split(r'(\+|-|\*|\/|\^)', cur_token[j + 1])
+                    for k in range(len(func_data)):
+                        if (n == 0 or n ==2) and func_data[k] in atoms:
+                            func_data[k] = func_data[k] + '_m'
+                        elif n == 1 and func_data[k] in atoms:
+                            func_data[k] = '(' + func_data[k] + '_p-' + func_data[k] + '_r)'
+                    cur_token[j + 1] = ''.join(func_data)
+                    
+                    # for atom in atoms:
+                    #     if n == 0 or n ==2:
+                    #         cur_token[j + 1] = cur_token[j + 1].replace(atom, atom + '_m')
+                    #     elif n == 1:
+                    #         cur_token[j + 1] = cur_token[j + 1].replace(atom, '(' + atom + '_p-' + atom + '_r)')   
+            token = ''.join(cur_token) 
+        else:
+            if n == 0 or n ==2:
+                if token in atoms:
+                    token = token + '_m'
+                if '^' in token:
+                    if token.split('^')[0] in atoms:
+                        token = token.split('^')[0] + '_m^' + token.split('^')[1]
+                    if token.split('^')[1] in atoms:
+                        token = token.split('^')[0] + '^' + token.split('^')[1] + '_m'
+            elif n == 1:
+                if token in atoms:
+                    token = '(' + token + '_p-' + token + '_r)'
+                if '^' in token:
+                    if token.split('^')[0] in atoms:
+                        token = '(' + token.split('^')[0] + '_p-' + token.split('^')[0] + '_r)^' + token.split('^')[1]
+                    if token.split('^')[1] in atoms:
+                        token = token.split('^')[0] + '^(' + token.split('^')[1] + '_p-' + token.split('^')[1] + '_r)'
         out_min += token
     
-    print('outstr: ' + out_pl + ' ' + out_min)
     return ''.join(tokens[0:-atoms_lenght]) + '(' +  out_pl + '-' + out_min + ')'
-
-
-
-
-
-    # print(tokens)
-    # print(str(atoms_lenght) + ' ' + tokens[-atoms_lenght] + '' + str(lenght) + tokens[lenght])
-
-    # return '0'
-        
-
-    # tokens.append('')     
-    # for i in range(len(tokens)):
-    #     for j in range(i + 1, len(tokens)):
-    #         print(str(i) + ' ' + str(j))
-    #         if (tokens[i] in atoms) and (tokens[j] in atoms):
-    #             if tokens[j - 1] == '*':
-    #                 if i == j - 2:
-    #                     tokens[j-1] = mul_change(tokens[i], tokens[j], n)
-    #                     tokens[i], tokens[j] = '', ''
-    #                 else:
-    #                     a, b = tokens[i], tokens[j]
-    #                     tokens = tokens[0:i] + tokens[i] + '*' + tokens[j] + tokens[i + 1: j -1] + tokens[j + 1: len(tokens)]
-    #                     tokens[i + 1] = mul_change(a, b, n)
-    #                     tokens[i], tokens[i + 2] = '', ''
-    #                 # return add_breaking(tokens, n, atoms)
-    #             elif tokens[j - 1] == '/':
-    #                 if i == j - 2:
-    #                     tokens[j - 1] = div_change(tokens[i], tokens[j], n)
-    #                     tokens[i], tokens[j] = '', ''
-    #                 else:
-    #                     a, b = tokens[i], tokens[j]
-    #                     tokens = [''.join(tokens[0:i]), tokens[i], '/', tokens[j], ''.join(tokens[i + 1: j - 1]), ''.join(tokens[j + 1: len(tokens)])]
-    #                     print('tokens(div): ' + str(tokens))
-    #                     tokens[i + 2] = div_change(a, b, n)
-    #                     tokens[i + 1], tokens[i + 3] = '', ''
-    #                     print('tokens(div2): ' + str(tokens))
-    #                 # return add_breaking(tokens, n, atoms)
-    #             elif tokens[i - 1] == '/':
-    #                 a, b = tokens[j], tokens[i]
-    #                 tokens = tokens[0:i] + tokens[j] + '/' + tokens[i] + tokens[i + 1: j -1] + tokens[j + 1: len(tokens)]
-    #                 tokens[j + 1] = div_change(a, b, n)
-    #                 tokens[j], tokens[j + 2] = '', ''
-    #                 # return add_breaking(tokens, n, atoms)
-    #             elif 'sin' in tokens[j]:
-    #                 tokens[j] = sin_change(tokens[j])
-    #             return add_break(''.join(tokens), n, atoms)
-    return ''.join(tokens)
-
-def single_change(a, n):
-    if int(n) == 0:
-        return '(' + str(a) + '_p-' + str(a) + '_m)'
-    elif int(n) == 1 or int(n) == 2:
-        return str(a) + '_r'
-
-def mul_change(a, b, n):
-    print('n: ' + str(n))
-    output = ''
-    if int(n) == 0:
-        output = '(' + str(a) + '_p-' + str(a) + '_m)-(' + str(b) + '_p-' + str(b) + '_m)'
-    elif int(n) == 1:
-        # output = '(' + str(a) + '_p*r_' + str(b) + '+' + str(b) + '_p*r_' + str(a) + '-r_' + str(a) + '*r_' + str(b) + ')'
-        output = '(' + str(a) + '_p*' + str(b) + '_r+' + str(b) + '_p*' + str(a) + '_r-' + str(a) + '_r*' + str(b) + '_r)'
-    elif int(n) == 2:
-        # output = '(' + str(a) + '_m*r_' + str(b) + '+' + str(b) + '_m*r_' + str(a) + '+r_' + str(a) + '*r_' + str(b) + ')'
-        output = '(' + str(a) + '_m*' + str(b) + '_r+' + str(b) + '_m*' + str(a) + '_r-' + str(a) + '_r*' + str(b) + '_r)'
-    return output
-
-def div_change(a, b, n):
-    print('n: ' + str(n))
-    if int(n) == 0:
-        return '(' + str(a) + '_p-' + str(a) + '_m)/(' + str(b) + '_p-' + str(b) + '_m)'
-    elif int(n) == 1:
-        # return '(' + str(a) + '_p/' + str(b) + '_p-(' + str(a) + '_p-r_' + str(a) + ')/(' + str(b) + '_p-r_' + str(b) + '))'
-        return '(' + str(a) + '_p/' + str(b) + '_p-(' + str(a) + '_p-' + str(a) + '_r)/(' + str(b) + '_p-' + str(b) + '_r))'
-    elif int(n) == 2:
-        # return '((r_' + str(a) + '+' +str(a) + '_m)/(r_' + str(b) + '+' + str(b) + '_m)-' + str(a) + '_m/' + str(b) + '_m)'
-        return '((' + str(a) + '_r+' +str(a) + '_m)/(' + str(b) + '_r+' + str(b) + '_m)-' + str(a) + '_m/' + str(b) + '_m)'
-    
-def sin_change(a, n):
-    return
-
-def sum_change(a, b, n):
-    if int(n) == 0:
-        return '(' + str(a) + '_p-' + str(a) + '_m+' + str(b) + '_p-' + str(b) + '_m)'
-    elif int(n) == 1:
-        return '(r(' + str(a) + ')+r(' + str(b) + '))'
-    elif int(n) == 2:
-        return '(r(' + str(a) + ')+r(' + str(b) + '))'
-
-def dif_change(a, b, n):
-    if int(n) == 0:
-        return '(' + str(a) + '_p-' + str(a) + '_m-' + str(b) + '_p+' + str(b) + '_m)'
-    elif int(n) == 1:
-        return '(r(' + str(a) + ')-r(' + str(b) + '))'
-    elif int(n) == 2:
-        return '(r(' + str(a) + ')-r(' + str(b) + '))'
