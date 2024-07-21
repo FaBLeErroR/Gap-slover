@@ -91,7 +91,7 @@ def find_atoms(tokens, n, atoms):
     if is_atom == False:
         return '0'
     
-    # print('1st: ' + str(tokens))
+    print('1st: ' + str(tokens))
     atoms_lenght = 0  
     for atom in atoms:
         if atom in tokens[0]:
@@ -100,7 +100,7 @@ def find_atoms(tokens, n, atoms):
             tokens[0] = '1'
             atoms_lenght += 2
             break
-
+    print('2nd: ' + str(tokens))
     
     lenght = len(tokens) - atoms_lenght
     i = 2
@@ -109,6 +109,9 @@ def find_atoms(tokens, n, atoms):
     while i <= lenght:
         for atom in atoms:
             if atom in tokens[i]:
+                tokens.append(tokens[i - 1])
+                tokens.append(tokens[i])
+                tokens.pop(i)
                 tokens.pop(i-1)
                 atoms_lenght += 2
                 lenght -= 2
@@ -119,6 +122,8 @@ def find_atoms(tokens, n, atoms):
         else:
             i += 2
 
+    print('まえ:　' + str(tokens))
+    print(tokens[-atoms_lenght])
     if tokens[-atoms_lenght] == '/':
         tokens = tokens[:-atoms_lenght] + ['*', '(', '1'] + tokens[-atoms_lenght:]
         tokens.append(')')
@@ -127,10 +132,11 @@ def find_atoms(tokens, n, atoms):
         tokens = tokens[:-atoms_lenght] + ['*', '('] + tokens[-atoms_lenght + 1:]
         tokens.append(')')
         atoms_lenght += 1
-    
+    print('あと：　' + str(tokens))
 
     out_min = ''
     out_pl = ''
+    print(str(tokens))
     for i in range(len(tokens) - atoms_lenght, len(tokens)):
         n = int(n)
         token = tokens[i]
@@ -212,4 +218,5 @@ def find_atoms(tokens, n, atoms):
                         token = token.split('^')[0] + '^(' + token.split('^')[1] + '_p-' + token.split('^')[1] + '_r)'
         out_min += token
     
+    print(out_pl + '    ' + out_min)
     return ''.join(tokens[0:-atoms_lenght]) + '(' +  out_pl + '-' + out_min + ')'
