@@ -62,6 +62,7 @@ def add_break(f, n, atoms):
 
 def find_atoms(tokens, n, atoms):
 
+    print(str(tokens))
     if len(tokens) == 1 and (tokens[0] == '+' or tokens[0] == '-'):
         return tokens[0]
 
@@ -91,7 +92,6 @@ def find_atoms(tokens, n, atoms):
     if is_atom == False:
         return '0'
     
-    print('1st: ' + str(tokens))
     atoms_lenght = 0  
     for atom in atoms:
         if atom in tokens[0]:
@@ -100,11 +100,12 @@ def find_atoms(tokens, n, atoms):
             tokens[0] = '1'
             atoms_lenght += 2
             break
-    print('2nd: ' + str(tokens))
     
     lenght = len(tokens) - atoms_lenght
     i = 2
     atom_replaced = False
+
+    print('mae: ' + str(tokens))
 
     while i <= lenght:
         for atom in atoms:
@@ -121,8 +122,8 @@ def find_atoms(tokens, n, atoms):
             atom_replaced = False
         else:
             i += 2
+    print('ato: ' + str(tokens))
 
-    print('まえ:　' + str(tokens))
     print(tokens[-atoms_lenght])
     if tokens[-atoms_lenght] == '/':
         tokens = tokens[:-atoms_lenght] + ['*', '(', '1'] + tokens[-atoms_lenght:]
@@ -132,15 +133,12 @@ def find_atoms(tokens, n, atoms):
         tokens = tokens[:-atoms_lenght] + ['*', '('] + tokens[-atoms_lenght + 1:]
         tokens.append(')')
         atoms_lenght += 1
-    print('あと：　' + str(tokens))
 
     out_min = ''
     out_pl = ''
-    print(str(tokens))
     for i in range(len(tokens) - atoms_lenght, len(tokens)):
         n = int(n)
         token = tokens[i]
-        # print(token)
         if 'sin' in token or 'cos' in token or 'tan' in token or 'cot' in token or 'sign' in token or 'sqrt' in token:
             cur_token = split(r'(\(|\))', tokens[i])
             for j in range(len(cur_token)):
@@ -152,12 +150,6 @@ def find_atoms(tokens, n, atoms):
                         elif n == 2 and func_data[k] in atoms:
                             func_data[k] = '(' + func_data[k] + '_r+' + func_data[k] + '_m)'
                     cur_token[j + 1] = ''.join(func_data)
-
-                    # for atom in atoms:
-                    #     if n == 0 or n ==1:
-                    #         cur_token[j + 1] = cur_token[j + 1].replace(atom, atom + '_p')
-                    #     elif n == 2:
-                    #         cur_token[j + 1] = cur_token[j + 1].replace(atom, '(' + atom + '_r+' + atom + '_m)') 
             token = ''.join(cur_token) 
         else:
             if n == 0 or n ==1:
@@ -168,7 +160,6 @@ def find_atoms(tokens, n, atoms):
                         token = token.split('^')[0] + '_p^' + token.split('^')[1]
                     if token.split('^')[1] in atoms:
                         token = token.split('^')[0] + '^' + token.split('^')[1] + '_p'
-                # token = token.replace(atom, atom + '_p')
             elif n == 2:
                 if token in atoms:
                     token = '(' + token + '_r+' + token + '_m)'
@@ -177,7 +168,6 @@ def find_atoms(tokens, n, atoms):
                         token = '(' + token.split('^')[0] + '_r+' + token.split('^')[0] + '_m)^' + token.split('^')[1]
                     if token.split('^')[1] in atoms:
                         token = token.split('^')[0] + '^(' + token.split('^')[1] + '_r+' + token.split('^')[1] + '_m)'
-                # token = token.replace(atom, '(' + atom + '_r+' + atom + '_m)')
         out_pl += token
 
         token = tokens[i]
@@ -193,11 +183,6 @@ def find_atoms(tokens, n, atoms):
                             func_data[k] = '(' + func_data[k] + '_p-' + func_data[k] + '_r)'
                     cur_token[j + 1] = ''.join(func_data)
                     
-                    # for atom in atoms:
-                    #     if n == 0 or n ==2:
-                    #         cur_token[j + 1] = cur_token[j + 1].replace(atom, atom + '_m')
-                    #     elif n == 1:
-                    #         cur_token[j + 1] = cur_token[j + 1].replace(atom, '(' + atom + '_p-' + atom + '_r)')   
             token = ''.join(cur_token) 
         else:
             if n == 0 or n ==2:
