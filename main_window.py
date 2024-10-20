@@ -1,4 +1,3 @@
-import sys
 import os
 from re import compile
 
@@ -6,7 +5,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton
 from PySide6.QtSql import QSqlTableModel
 from PySide6 import QtWidgets
 
-from changer import add_break
+from changer import add_breaks
 from ui_main import Ui_MainWindow
 
 
@@ -35,6 +34,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ui.save_button.clicked.connect(self.save_file)
         self.ui.slave_button.clicked.connect(self.slove_func)
         
+        # Кнопки для добавления греческих символов в выражения
         self.ui.f_button1.clicked.connect(lambda: self.add_symb_to_form('α'))
         self.ui.f_button2.clicked.connect(lambda: self.add_symb_to_form('β'))
         self.ui.f_button3.clicked.connect(lambda: self.add_symb_to_form('γ'))
@@ -68,6 +68,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ui.f_button31.clicked.connect(lambda: self.add_symb_to_form('Ψ'))
         self.ui.f_button32.clicked.connect(lambda: self.add_symb_to_form('Ω'))
 
+        # Кнопки для добавления греческих символов в список атомов
         self.ui.f_button1_2.clicked.connect(lambda: self.add_symb_to_atoms('α'))
         self.ui.f_button2_2.clicked.connect(lambda: self.add_symb_to_atoms('β'))
         self.ui.f_button3_2.clicked.connect(lambda: self.add_symb_to_atoms('γ'))
@@ -147,7 +148,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         n = self.ui.split_input.value()
         atoms = get_variables(self.ui.atoms_input.text())
         self.ui.solution_input.clear()
-        self.ui.solution_input.append(add_break(f, n, atoms))
+        self.ui.solution_input.append(add_breaks(f, n, atoms))
 
     def add_symb_to_form(self, symb):
         self.ui.formula_input.textCursor().insertText(symb)
