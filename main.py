@@ -3,7 +3,7 @@ import sys
 
 from main_window import MainWindow
 
-
+# Запуск пользовательского интерфейса
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()

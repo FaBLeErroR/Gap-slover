@@ -1,29 +1,28 @@
 import os
 from re import compile
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton
-from PySide6.QtSql import QSqlTableModel
+from PySide6.QtWidgets import QMainWindow
 from PySide6 import QtWidgets
 
 from changer import add_breaks
 from ui_main import Ui_MainWindow
 
 
-
+# Считывание входного .mac файла
 def process_input(input_text):
     lines = input_text.strip().split('\n')
     cleaned_lines = [line.replace(';', '').strip() for line in lines]
     return cleaned_lines
 
 
-
+# Считывание атомов во входном файле
 def get_variables(input_string):
     var_pattern = compile(r'[a-zA-Zα-ωΓ-Ω_0-9]+')
     variables = set(var_pattern.findall(input_string))
     return variables
 
 
-
+# Привязка функционала к элементам интерфейса
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -128,6 +127,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.ui.split_input.setValue(int(n))
 
+    # Выполнение операции взятия разрыва
     def save_file(self):
         nofile = ('', '')
         current_folder_path = os.getcwd()
@@ -150,9 +150,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ui.solution_input.clear()
         self.ui.solution_input.append(add_breaks(f, n, atoms))
 
+    # Добавление греческих символов во входное выражение
     def add_symb_to_form(self, symb):
         self.ui.formula_input.textCursor().insertText(symb)
 
+    # Добавление греческих символов в список атомов
     def add_symb_to_atoms(self, symb):
         if self.ui.atoms_input.cursorPosition() == 0 or self.ui.atoms_input.text()[self.ui.atoms_input.cursorPosition() - 1] == ' ':
             self.ui.atoms_input.insert(symb)
